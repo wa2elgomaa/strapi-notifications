@@ -1,0 +1,31 @@
+{
+  "kind": "singleType",
+  "collectionName": "fcm_plugin_configurations",
+  "info": {
+    "singularName": "fcm-plugin-configuration",
+    "pluralName": "fcm-plugin-configurations",
+    "displayName": "FCM Plugin Configuration"
+  },
+  "options": {
+    "draftAndPublish": false,
+    "comment": ""
+  },
+  "attributes": {
+    "serviceAccount": {
+      "type": "json",
+      "required": true
+    },
+    "namespace": {
+      "type": "string",
+      "default": "plugin::users-permissions.user"
+    },
+    "tokenField": {
+      "type": "string",
+      "default": "fcm"
+    },
+    "labelField": {
+      "type": "string",
+      "default": "username"
+    }
+  }
+}
