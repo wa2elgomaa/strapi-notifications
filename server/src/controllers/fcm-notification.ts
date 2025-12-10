@@ -53,119 +53,121 @@ const getUserSpecificQuery = (ctx: Context) => {
         ]
     }
 }
-export default ({ strapi }: { strapi: Core.Strapi }) => {
-    const service = getService(strapi, 'fcm-notification')
+export default ({ strapi }: { strapi: Core.Strapi }) => ({
+    async find(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            _.set(ctx, 'request.query.status', 'published')
+            // use user fcm to get his own notifications
+            _.set(ctx, 'request.query.filters', getUserSpecificQuery(ctx))
 
-    return ({
-        async find(ctx: Context) {
-            try {
+            const { data: notifications = [] } = await service.find(ctx);
+            // sanitize notifications 
+            ctx.body = {
+                data: notifications.map(sanitizeNotification)
+            };
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
 
-                _.set(ctx, 'request.query.status', 'published')
-                // use user fcm to get his own notifications
-                _.set(ctx, 'request.query.filters', getUserSpecificQuery(ctx))
+    async findOne(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            const { data: notification } = await service.findOne(ctx);
+            const sanitizedNotification = sanitizeNotification(notification);
+            ctx.body = {
+                data: sanitizedNotification
+            };
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
 
-                const { data: notifications = [] } = await service.find(ctx);
-                // sanitize notifications 
-                ctx.body = {
-                    data: notifications.map(sanitizeNotification)
-                };
-            } catch (err) {
-                ctx.throw(500, err);
-            }
-        },
+    async delete(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            ctx.body = await service.delete(ctx);
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
 
-        async findOne(ctx: Context) {
-            try {
-                const { data: notification } = await service.findOne(ctx);
-                const sanitizedNotification = sanitizeNotification(notification);
-                ctx.body = {
-                    data: sanitizedNotification
-                };
-            } catch (err) {
-                ctx.throw(500, err);
-            }
-        },
+    async create(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            //TODO: validate notification 
+            ctx.body = await service.create(ctx);
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
 
-        async delete(ctx: Context) {
-            try {
-                ctx.body = await service.delete(ctx);
-            } catch (err) {
-                ctx.throw(500, err);
-            }
-        },
+    async update(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            // TODO: validate request body 
+            const { data: notification } = await service.update(ctx);
+            ctx.body = {
+                data: sanitizeNotification(notification)
+            };
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
 
-        async create(ctx: Context) {
-            try {
-                //TODO: validate notification 
-                ctx.body = await service.create(ctx);
-            } catch (err) {
-                ctx.throw(500, err);
-            }
-        },
+    async read(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            _.set(ctx, 'request.query.filters', getUserSpecificQuery(ctx))
+            _.set(ctx, 'request.query.filters.read', false)
+            const { data: notifications = [] } = await service.find(ctx);
 
-        async update(ctx: Context) {
-            try {
-                // TODO: validate request body 
-                const { data: notification } = await service.update(ctx);
-                ctx.body = {
-                    data: sanitizeNotification(notification)
-                };
-            } catch (err) {
-                ctx.throw(500, err);
-            }
-        },
-
-        async read(ctx: Context) {
-            try {
-                _.set(ctx, 'request.query.filters', getUserSpecificQuery(ctx))
-                _.set(ctx, 'request.query.filters.read', false)
-                const { data: notifications = [] } = await service.find(ctx);
-
-                if (notifications.length) {
-                    notifications.forEach(async (notification) => {
-                        await service.update({
-                            params: {
-                                id: notification.documentId
-                            },
-                            request: {
-                                body: {
-                                    data: {
-                                        read: true
-                                    }
+            if (notifications.length) {
+                notifications.forEach(async (notification) => {
+                    await service.update({
+                        params: {
+                            id: notification.documentId
+                        },
+                        request: {
+                            body: {
+                                data: {
+                                    read: true
                                 }
                             }
-                        });
+                        }
                     });
-                }
-                return true
-            } catch (err) {
-                ctx.throw(500, err);
+                });
             }
-        },
+            return true
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
 
-        async count(ctx: Context) {
-            try {
-                const count = await service.count(ctx);
-                return {
-                    data: {
-                        count
-                    }
+    async count(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            const count = await service.count(ctx);
+            return {
+                data: {
+                    count
                 }
-            } catch (err) {
-                ctx.throw(500, err);
             }
-        },
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
 
-        async send(ctx: Context) {
-            try {
-                const response = await service.send(ctx);
-                return {
-                    data: response
-                }
-            } catch (err) {
-                ctx.throw(500, err);
+    async send(ctx: Context) {
+        try {
+            const service = getService(strapi, 'fcm-notification')
+            const response = await service.send(ctx);
+            return {
+                data: response
             }
-        },
-    })
-}
-
+        } catch (err) {
+            ctx.throw(500, err);
+        }
+    },
+})

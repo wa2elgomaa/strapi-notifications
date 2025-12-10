@@ -6,13 +6,12 @@
 
 import fcmUtil from '../../../util/fcm'
 import { Core } from '@strapi/strapi';
-import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
 import { get } from 'lodash';
 
 
 const uid = 'plugin::strapi-notifications.fcm-notification';
-const fcmNotification = factories.createCoreService(uid, ({ strapi }: { strapi: Core.Strapi }) => ({
+const fcmNotification = ({ strapi }: { strapi: Core.Strapi }) => ({
     async find(ctx) {
         const { query = {} } = ctx.request
         const results = await strapi.documents(uid).findMany(query);
@@ -135,6 +134,6 @@ const fcmNotification = factories.createCoreService(uid, ({ strapi }: { strapi: 
             },
         });
     },
-}));
+})
 
 export default fcmNotification
