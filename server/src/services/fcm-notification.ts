@@ -125,8 +125,11 @@ const fcmNotification = factories.createCoreService(uid, ({ strapi }: { strapi: 
                 ...(get(query, 'filters', {})),
                 read: false,
                 $or: [
-                    { target: user.id },
-                    { target: user.fcm },
+                    ...(user ? [
+                        { target: user.id },
+                        { target: user.fcm },
+                        { target: { $eq: get(user, 'role.type', '') } }
+                    ] : []),
                     { target: 'all' },
                 ]
             },

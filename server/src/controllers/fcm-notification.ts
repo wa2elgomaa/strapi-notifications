@@ -30,7 +30,7 @@ const getUserSpecificQuery = (ctx: Context) => {
         ...(_.get(ctx, 'request.query.filters', {})),
         $or: [
             ...(_.get(ctx, 'request.query.filters.$or', [])),
-            {
+            ...(user ? [{
                 target: {
                     $eq: user.fcm
                 }
@@ -42,14 +42,14 @@ const getUserSpecificQuery = (ctx: Context) => {
             },
             {
                 target: {
+                    $eq: _.get(user, 'role.type', '')
+                }
+            }] : []),
+            {
+                target: {
                     $eq: 'all'
                 }
             },
-            {
-                target: {
-                    $eq: _.get(user, 'role.type', '')
-                }
-            }
         ]
     }
 }
